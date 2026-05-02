@@ -1,0 +1,23 @@
+# 민감 파일
+.credentials.json
+mcp-needs-auth-cache.json
+
+# 대용량 / 개인 데이터
+history.jsonl
+sessions/
+projects/
+cache/
+tasks/
+telemetry/
+paste-cache/
+shell-snapshots/
+file-history/
+backups/
+ide/
+plans/
+session-env/
+
+# 임시 파일
+*.log
+statusline-debug.json
+cmdtrace-*.json

@@ -1,0 +1,19 @@
+{
+  "_note": "Claude Code 훅 설정 파일 — 수정 후 Claude Code 재시작하면 적용됩니다",
+
+  "notification": {
+    "thresholdSeconds": 600,
+    "_note": "작업 완료 알림을 보낼 최소 소요 시간(초). 예: 300=5분, 600=10분, 1800=30분"
+  },
+
+  "obsidian": {
+    "apiUrl": "https://127.0.0.1:27124",
+    "noteFolder": "9. 프로젝트",
+    "_note": "git push 시 노트가 생성될 볼트 내 폴더명 (볼트 A 기준)"
+  },
+
+  "deletion": {
+    "blockMode": "dangerous",
+    "_note": "dangerous=재귀·강제 삭제만 차단 / all=모든 삭제 명령 차단"
+  }
+}
