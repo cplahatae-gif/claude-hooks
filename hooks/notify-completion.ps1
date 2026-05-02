@@ -38,7 +38,7 @@ try {
 
     # 10분 이상 걸린 복잡한 작업 → 자기검증 요청 컨텍스트 주입
     $verifyMsg = "이 작업은 ${minutes}분이 소요된 장시간 작업입니다. 마무리 전에 사용자의 원래 요청 항목을 모두 이행했는지 스스로 점검하세요."
-    @{ hookSpecificOutput = @{ additionalContext = $verifyMsg } } | ConvertTo-Json -Compress
+    @{ systemMessage = $verifyMsg } | ConvertTo-Json -Compress
 } catch {}
 
 exit 0

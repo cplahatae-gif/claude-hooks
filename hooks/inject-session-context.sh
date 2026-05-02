@@ -23,5 +23,5 @@ if [ -n "$STAGED" ]; then
 - 스테이징된 파일: $STAGED"
 fi
 
-jq -n --arg ctx "$CTX" '{"hookSpecificOutput": {"additionalContext": $ctx}}'
+jq -n --arg ctx "$CTX" '{"systemMessage": $ctx}'
 exit 0

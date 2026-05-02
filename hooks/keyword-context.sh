@@ -33,5 +33,5 @@ if echo "$PROMPT" | grep -qiE "훅|hook"; then
 - GitHub: https://github.com/cplahatae-gif/claude-hooks"
 fi
 
-[ -n "$CTX" ] && jq -n --arg ctx "${CTX#$'\n'}" '{"hookSpecificOutput": {"additionalContext": $ctx}}'
+[ -n "$CTX" ] && jq -n --arg ctx "${CTX#$'\n'}" '{"hookSpecificOutput": {"hookEventName": "UserPromptSubmit", "additionalContext": $ctx}}'
 exit 0

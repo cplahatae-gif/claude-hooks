@@ -67,7 +67,6 @@ jq -n \
   --arg host "$DEVICE_HOST" \
   --arg os "$DEVICE_OS" \
   --arg hooks "$HOOK_COUNT" \
-  '{"hookSpecificOutput": {"additionalContext":
-    "현재 기기: \($host) (\($os)) | 설치된 훅: \($hooks)개"}}'
+  '{"systemMessage": "현재 기기: \($host) (\($os)) | 설치된 훅: \($hooks)개"}'
 
 exit 0

@@ -19,5 +19,5 @@ if git rev-parse --git-dir > /dev/null 2>&1; then
 - 수정 파일: $MODIFIED}"
 fi
 
-jq -n --arg ctx "$CTX" '{"hookSpecificOutput": {"additionalContext": $ctx}}'
+jq -n --arg ctx "$CTX" '{"systemMessage": $ctx}'
 exit 0
