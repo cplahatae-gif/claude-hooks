@@ -48,6 +48,10 @@
           {
             "type": "command",
             "command": "bash ~/.claude/hooks/run-ps1.sh track-start.ps1"
+          },
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/keyword-context.sh"
           }
         ]
       }
@@ -58,6 +62,20 @@
           {
             "type": "command",
             "command": "bash ~/.claude/hooks/run-ps1.sh notify-completion.ps1"
+          },
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/check-uncommitted.sh"
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/reinject-after-compact.sh"
           }
         ]
       }
@@ -69,6 +87,26 @@
           {
             "type": "command",
             "command": "bash ~/.claude/hooks/run-ps1.sh git-to-obsidian.ps1"
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/audit-log.sh",
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ~/.claude/hooks/failure-log.sh",
+            "async": true
           }
         ]
       }
