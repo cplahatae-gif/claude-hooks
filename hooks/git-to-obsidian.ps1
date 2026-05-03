@@ -1,4 +1,5 @@
-# PostToolUse 훅: git push 감지 후 Obsidian 볼트 A에 프로젝트 노트 생성/업데이트
+# PostToolUse 훅: git push 감지 → CMDS 프로젝트 노트(70. Outputs/74. Projects/)에 push 이력 추가
+# 별도 노트 생성 안 함. /obsidian-project-sync 스킬이 만든 노트에만 기록.
 
 $rawInput = [Console]::In.ReadToEnd()
 if (-not $rawInput) { exit 0 }
@@ -12,13 +13,10 @@ if ($command -notmatch "git\s+push") { exit 0 }
 # 설정 로드
 $configPath = "$env:USERPROFILE\.claude\hooks\hook-config.json"
 $apiUrl = "https://127.0.0.1:27124"
-$noteFolder = "9. 프로젝트"
-
 if (Test-Path $configPath) {
     try {
-        $config = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
-        $apiUrl = $config.obsidian.apiUrl
-        $noteFolder = $config.obsidian.noteFolder
+        $cfg = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        if ($cfg.obsidian.apiUrl) { $apiUrl = $cfg.obsidian.apiUrl }
     } catch {}
 }
 
@@ -27,61 +25,52 @@ if (-not $apiKey) { exit 0 }
 
 # git 정보 수집
 try {
-    $repoRoot = git rev-parse --show-toplevel 2>$null
+    $repoRoot  = git rev-parse --show-toplevel 2>$null
     if (-not $repoRoot) { exit 0 }
 
     $remoteUrl = git remote get-url origin 2>$null
-    if ($remoteUrl) {
-        $repoName = ($remoteUrl -split '/')[-1] -replace '\.git$', ''
-    } else {
-        $repoName = Split-Path $repoRoot -Leaf
-    }
-
-    $branch        = git branch --show-current 2>$null
-    $lastCommitMsg = git log -1 --format="%s" 2>$null
-    $lastAuthor    = git log -1 --format="%an" 2>$null
-    $commitCount   = git rev-list --count HEAD 2>$null
-    $pushTime      = Get-Date -Format "yyyy-MM-dd HH:mm"
-
-    # SSH → HTTPS 변환
-    $githubUrl = $remoteUrl -replace 'git@github\.com:', 'https://github.com/' -replace '\.git$', ''
+    $repoName  = if ($remoteUrl) { ($remoteUrl -split '/')[-1] -replace '\.git$', '' } else { Split-Path $repoRoot -Leaf }
+    $branch    = git branch --show-current 2>$null
+    $commitMsg = git log -1 --format="%s" 2>$null
+    $pushDate  = Get-Date -Format "yyyy-MM-dd"
 } catch { exit 0 }
 
-$noteContent = @"
----
-tags:
-  - project
-  - git
-last_pushed: $pushTime
-branch: $branch
----
-
-# $repoName
-
-## 최근 Push
-- **시간**: $pushTime
-- **브랜치**: $branch
-- **커밋**: $lastCommitMsg
-- **작성자**: $lastAuthor
-- **누적 커밋 수**: $commitCount
-
-## 링크
-- [GitHub]($githubUrl)
-- 로컬 경로: ``$repoRoot``
-"@
-
-$notePath = "$noteFolder/$repoName.md"
-$encodedPath = [Uri]::EscapeDataString($notePath)
+$authHeader = @{ "Authorization" = "Bearer $apiKey" }
 
 try {
-    $body = [System.Text.Encoding]::UTF8.GetBytes($noteContent)
-    $headers = @{
+    # CMDS 프로젝트 노트 검색 (74. Projects 하위)
+    $encoded = [Uri]::EscapeDataString($repoName)
+    $results = Invoke-RestMethod -Uri "$apiUrl/search/simple/?query=$encoded" `
+        -Method Post -Headers $authHeader -SkipCertificateCheck -ErrorAction Stop
+
+    $note = $results | Where-Object { $_.filename -like "*74*Projects*" } | Select-Object -First 1
+    if (-not $note) { exit 0 }  # 노트 없으면 조용히 종료 (/obsidian-project-sync로 먼저 생성 필요)
+
+    $notePath    = $note.filename
+    $encodedPath = [Uri]::EscapeDataString($notePath)
+
+    # 기존 노트 읽기
+    $content = Invoke-RestMethod -Uri "$apiUrl/vault/$encodedPath" `
+        -Method Get -Headers $authHeader -SkipCertificateCheck -ErrorAction Stop
+
+    # 진행 상황 섹션 바로 아래에 push 항목 삽입
+    $pushEntry = "### $pushDate — push ($branch)`n- $commitMsg`n"
+
+    if ($content -match "(?m)^## 진행 상황") {
+        $content = [regex]::Replace($content, "(?m)(^## 진행 상황[ \t]*\r?\n)", "`$1`n$pushEntry")
+    } else {
+        $content += "`n## 진행 상황`n`n$pushEntry"
+    }
+
+    # 업데이트
+    $putHeaders = @{
         "Authorization" = "Bearer $apiKey"
         "Content-Type"  = "text/markdown; charset=utf-8"
     }
-    Invoke-RestMethod -Uri "$apiUrl/vault/$encodedPath" -Method Put -Headers $headers -Body $body -SkipCertificateCheck -ErrorAction Stop
-} catch {
-    Write-Error "Obsidian 노트 등록 실패: $_"
-}
+    $bytes = [System.Text.Encoding]::UTF8.GetBytes($content)
+    Invoke-RestMethod -Uri "$apiUrl/vault/$encodedPath" -Method Put `
+        -Headers $putHeaders -Body $bytes -SkipCertificateCheck -ErrorAction Stop
+
+} catch { exit 0 }
 
 exit 0

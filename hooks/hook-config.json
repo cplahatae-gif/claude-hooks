@@ -8,8 +8,7 @@
 
   "obsidian": {
     "apiUrl": "https://127.0.0.1:27124",
-    "noteFolder": "9. 프로젝트",
-    "_note": "git push 시 노트가 생성될 볼트 내 폴더명 (볼트 A 기준)"
+    "_note": "git push 시 74. Projects 하위 CMDS 노트를 검색해 push 이력 추가 (별도 노트 생성 안 함)"
   },
 
   "deletion": {
